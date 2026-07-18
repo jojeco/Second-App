@@ -1,0 +1,21 @@
+{
+  "images" : [
+    {
+      "filename" : "one-piece-chill-video-viaggio-wano-digital-art-v3-575447.jpg",
+      "idiom" : "universal",
+      "scale" : "1x"
+    },
+    {
+      "idiom" : "universal",
+      "scale" : "2x"
+    },
+    {
+      "idiom" : "universal",
+      "scale" : "3x"
+    }
+  ],
+  "info" : {
+    "author" : "xcode",
+    "version" : 1
+  }
+}
