@@ -1,4 +1,6 @@
 # Next increments
 
-- Modernize `ContentView_Previews` to the `#Preview` macro — the project's minimum deployment target is already 18.2, so this is unblocked.
-- No test target exists in the .xcodeproj — adding one is the prerequisite for actually unit-testing `GameLogic`.
+- Add a test target to the .xcodeproj so `GameLogic.summarize`, `trimmed` and `resolveRound` can be unit-tested; `GameStatsStore` already accepts an injected `UserDefaults` for suite-based tests.
+- Persist the last-selected `GameMode` so the app reopens in the mode the player last used.
+- Add a per-mode filter to the Stats sheet (the store's `rounds(for:)` already takes an optional mode).
+- Consider a lightweight round-detail view showing taps/sec trend across the stored history.
