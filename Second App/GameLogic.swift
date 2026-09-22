@@ -79,4 +79,52 @@ enum GameLogic {
     static func trimmed(rounds: [RoundRecord], limit: Int = historyLimit) -> [RoundRecord] {
         return Array(rounds.prefix(limit))
     }
+
+    /// Folds one more finished round into the never-trimmed lifetime totals.
+    static func accumulate(totals: LifetimeTotals, round: RoundRecord) -> LifetimeTotals {
+        return LifetimeTotals(
+            roundsPlayed: totals.roundsPlayed + 1,
+            totalTaps: totals.totalTaps + round.score,
+            bestScore: max(totals.bestScore, round.score),
+            bestTapsPerSecond: max(totals.bestTapsPerSecond, round.tapsPerSecond)
+        )
+    }
+
+    static func summarize(totals: LifetimeTotals) -> StatsSummary {
+        let averageScore = Double(totals.totalTaps) / Double(max(totals.roundsPlayed, 1))
+        return StatsSummary(
+            roundsPlayed: totals.roundsPlayed,
+            totalTaps: totals.totalTaps,
+            bestScore: totals.bestScore,
+            averageScore: averageScore,
+            bestTapsPerSecond: totals.bestTapsPerSecond
+        )
+    }
+
+    /// A round the player never tapped in shouldn't move any stat — not
+    /// `roundsPlayed`, not `totalTaps`. Deliberate decision: a zero-score
+    /// round counts toward nothing, it's excluded from both the stored
+    /// history and the lifetime totals rather than treated as a real round
+    /// with a score of zero.
+    static func shouldRecord(round: RoundRecord) -> Bool {
+        return round.score > 0
+    }
+
+    /// Seeds `archive.lifetime` the first time an archive is loaded that
+    /// predates lifetime totals, by folding the (already-trimmed) round
+    /// history and then widening `bestScore` with every known per-mode high
+    /// score plus the legacy single high-score key, so a round that aged out
+    /// of the trimmed window before this migration ran still counts.
+    /// Gated on `archive.lifetime == nil`, not `version`, so re-running this
+    /// on an already-migrated archive is a no-op.
+    static func migrated(archive: StatsArchive, legacyHighScore: Int) -> StatsArchive {
+        guard archive.lifetime == nil else { return archive }
+        var migratedArchive = archive
+        let folded = archive.rounds.reduce(LifetimeTotals.empty) { accumulate(totals: $0, round: $1) }
+        var totals = folded
+        totals.bestScore = max(folded.bestScore, archive.highScores.values.max() ?? 0, legacyHighScore)
+        migratedArchive.lifetime = totals
+        migratedArchive.version = 2
+        return migratedArchive
+    }
 }

@@ -27,7 +27,7 @@ final class GameViewModel: ObservableObject {
         let store = GameStatsStore(defaults: defaults)
         self.store = store
         self.highScore = store.highScore(for: .classic)
-        self.summary = GameLogic.summarize(rounds: store.rounds(for: nil))
+        self.summary = GameLogic.summarize(totals: store.archive.lifetime ?? .empty)
         self.recentRounds = store.rounds(for: nil)
     }
 
@@ -36,12 +36,21 @@ final class GameViewModel: ObservableObject {
         score += 1
     }
 
+    /// Re-arms the round timer only when a round is genuinely live. Without
+    /// this guard, a stale re-appear (e.g. returning from the Stats sheet
+    /// after a round already ended) would flip `gameActive` back on with the
+    /// finished `score` still populated, letting the player tap for up to
+    /// another second and then record a second, inflated round off the same
+    /// score. `gameActive` is cleared only once `tick()` has recorded the
+    /// round, so it is exactly the right thing to gate on; `reset()` sets it
+    /// back to `true` itself before calling this, so the reset path is
+    /// unaffected.
     func start() {
+        guard gameActive else { return }
         timer?.invalidate()
         timer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { [weak self] _ in
             self?.tick()
         }
-        gameActive = true
     }
 
     /// Switches mode. The round in progress is abandoned: nothing is recorded
@@ -64,7 +73,7 @@ final class GameViewModel: ObservableObject {
             let outcome = store.record(round: round, mode: mode)
             highScore = store.highScore(for: mode)
             isNewHighScore = outcome.isNewHighScore
-            summary = GameLogic.summarize(rounds: store.rounds(for: nil))
+            summary = GameLogic.summarize(totals: store.archive.lifetime ?? .empty)
             recentRounds = store.rounds(for: nil)
             gameActive = false
         }
@@ -74,6 +83,7 @@ final class GameViewModel: ObservableObject {
         score = 0
         timeRemaining = mode.duration
         isNewHighScore = false
+        gameActive = true
         start()
     }
 

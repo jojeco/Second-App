@@ -2,7 +2,8 @@
 //  StatsView.swift
 //  Second App
 //
-//  Sheet showing totals over the stored round history (last 20 rounds) and the most recent rounds.
+//  Sheet showing lifetime totals (accumulated over every recorded round, never
+//  trimmed) and the most recent rounds from the stored history window.
 //
 
 import SwiftUI
