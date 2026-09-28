@@ -64,19 +64,20 @@ final class GameViewModel: ObservableObject {
     }
 
     private func tick() {
+        guard gameActive else { return }
         if timeRemaining > 0 {
             timeRemaining -= 1
-        } else {
-            timer?.invalidate()
-            timer = nil
-            let round = RoundRecord(modeID: mode.rawValue, score: score, duration: mode.duration, date: Date())
-            let outcome = store.record(round: round, mode: mode)
-            highScore = store.highScore(for: mode)
-            isNewHighScore = outcome.isNewHighScore
-            summary = GameLogic.summarize(totals: store.archive.lifetime ?? .empty)
-            recentRounds = store.rounds(for: nil)
-            gameActive = false
         }
+        guard timeRemaining <= 0 else { return }
+        timer?.invalidate()
+        timer = nil
+        let round = RoundRecord(modeID: mode.rawValue, score: score, duration: mode.duration, date: Date())
+        let outcome = store.record(round: round, mode: mode)
+        highScore = store.highScore(for: mode)
+        isNewHighScore = outcome.isNewHighScore
+        summary = GameLogic.summarize(totals: store.archive.lifetime ?? .empty)
+        recentRounds = store.rounds(for: nil)
+        gameActive = false
     }
 
     func reset() {
