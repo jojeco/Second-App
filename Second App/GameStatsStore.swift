@@ -17,6 +17,10 @@ struct StatsArchive: Codable, Equatable {
     // pre-existing v1 JSON blobs (no "lifetime" key) decode cleanly instead of
     // throwing keyNotFound. Do not make this non-optional.
     var lifetime: LifetimeTotals? = nil
+    // Same reasoning as `lifetime` above: optional with a nil default so
+    // archives saved before per-mode totals existed still decode cleanly.
+    // Do not make this non-optional.
+    var lifetimeByMode: [String: LifetimeTotals]? = nil
 
     static let empty = StatsArchive(version: 1, highScores: [:], rounds: [])
 }
@@ -40,11 +44,16 @@ final class GameStatsStore {
         let legacy = defaults.integer(forKey: GameLogic.highScoreKey)
         loaded.highScores["classic"] = max(loaded.highScores["classic"] ?? 0, legacy)
         loaded = GameLogic.migrated(archive: loaded, legacyHighScore: legacy)
+        loaded = GameLogic.migratedPerMode(archive: loaded)
         self.archive = loaded
     }
 
     func highScore(for mode: GameMode) -> Int {
         return archive.highScores[mode.rawValue] ?? 0
+    }
+
+    func lifetime(for mode: GameMode) -> LifetimeTotals {
+        return archive.lifetimeByMode?[mode.rawValue] ?? .empty
     }
 
     /// Newest-first. Pass nil for every mode.
@@ -65,6 +74,9 @@ final class GameStatsStore {
             archive.rounds.insert(round, at: 0)
             archive.rounds = GameLogic.trimmed(rounds: archive.rounds)
             archive.lifetime = GameLogic.accumulate(totals: archive.lifetime ?? .empty, round: round)
+            var byMode = archive.lifetimeByMode ?? [:]
+            byMode[mode.rawValue] = GameLogic.accumulate(totals: byMode[mode.rawValue] ?? .empty, round: round)
+            archive.lifetimeByMode = byMode
         }
         persist()
         if mode == .classic {

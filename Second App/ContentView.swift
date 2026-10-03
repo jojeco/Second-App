@@ -78,7 +78,7 @@ struct ContentView: View {
             .padding(.bottom)
         }
         .sheet(isPresented: $showingStats) {
-            StatsView(summary: viewModel.summary, rounds: viewModel.recentRounds)
+            StatsView(summary: viewModel.summary, modeSummaries: viewModel.modeSummaries, rounds: viewModel.recentRounds)
         }
         .onAppear { viewModel.start() }
         .onDisappear { viewModel.stop() }

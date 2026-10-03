@@ -127,4 +127,26 @@ enum GameLogic {
         migratedArchive.version = 2
         return migratedArchive
     }
+
+    /// Seeds `archive.lifetimeByMode` the first time an archive is loaded
+    /// that predates per-mode lifetime totals, by folding the
+    /// (already-trimmed) round history per mode and then widening each
+    /// mode's `bestScore` with that mode's known high score, so a round that
+    /// aged out of the trimmed window before this migration ran still
+    /// counts. Gated on `archive.lifetimeByMode == nil`, not `version`, so
+    /// re-running this on an already-migrated archive is a no-op.
+    static func migratedPerMode(archive: StatsArchive) -> StatsArchive {
+        guard archive.lifetimeByMode == nil else { return archive }
+        var migratedArchive = archive
+        var byMode: [String: LifetimeTotals] = [:]
+        for mode in GameMode.allCases {
+            let modeRounds = archive.rounds.filter { $0.modeID == mode.rawValue }
+            let folded = modeRounds.reduce(LifetimeTotals.empty) { accumulate(totals: $0, round: $1) }
+            var totals = folded
+            totals.bestScore = max(folded.bestScore, archive.highScores[mode.rawValue] ?? 0)
+            byMode[mode.rawValue] = totals
+        }
+        migratedArchive.lifetimeByMode = byMode
+        return migratedArchive
+    }
 }

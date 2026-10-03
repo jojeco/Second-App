@@ -18,6 +18,7 @@ final class GameViewModel: ObservableObject {
     @Published private(set) var highScore: Int
     @Published private(set) var mode: GameMode = .classic
     @Published private(set) var summary: GameLogic.StatsSummary
+    @Published private(set) var modeSummaries: [GameMode: GameLogic.StatsSummary]
     @Published private(set) var recentRounds: [RoundRecord]
 
     private var timer: Timer?
@@ -28,7 +29,12 @@ final class GameViewModel: ObservableObject {
         self.store = store
         self.highScore = store.highScore(for: .classic)
         self.summary = GameLogic.summarize(totals: store.archive.lifetime ?? .empty)
+        self.modeSummaries = GameViewModel.computeModeSummaries(from: store)
         self.recentRounds = store.rounds(for: nil)
+    }
+
+    private static func computeModeSummaries(from store: GameStatsStore) -> [GameMode: GameLogic.StatsSummary] {
+        Dictionary(uniqueKeysWithValues: GameMode.allCases.map { ($0, GameLogic.summarize(totals: store.lifetime(for: $0))) })
     }
 
     func tap() {
@@ -76,6 +82,7 @@ final class GameViewModel: ObservableObject {
         highScore = store.highScore(for: mode)
         isNewHighScore = outcome.isNewHighScore
         summary = GameLogic.summarize(totals: store.archive.lifetime ?? .empty)
+        modeSummaries = GameViewModel.computeModeSummaries(from: store)
         recentRounds = store.rounds(for: nil)
         gameActive = false
     }
