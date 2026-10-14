@@ -14,6 +14,7 @@ final class GameViewModel: ObservableObject {
     @Published private(set) var score = 0
     @Published private(set) var timeRemaining = GameMode.classic.duration
     @Published private(set) var gameActive = true
+    @Published private(set) var roundStarted = false
     @Published private(set) var isNewHighScore = false
     @Published private(set) var highScore: Int
     @Published private(set) var mode: GameMode = .classic
@@ -37,22 +38,36 @@ final class GameViewModel: ObservableObject {
         Dictionary(uniqueKeysWithValues: GameMode.allCases.map { ($0, GameLogic.summarize(totals: store.lifetime(for: $0))) })
     }
 
+    /// The first tap of a round arms the countdown timer (and counts as the
+    /// round's first point); every tap after that just scores. This keeps a
+    /// player from losing seconds of a short mode (e.g. the 10s Sprint) to
+    /// the time between the screen appearing and their first tap.
     func tap() {
         guard gameActive else { return }
         score += 1
+        if !roundStarted {
+            roundStarted = true
+            start()
+        }
     }
 
-    /// Re-arms the round timer only when a round is genuinely live. Without
-    /// this guard, a stale re-appear (e.g. returning from the Stats sheet
-    /// after a round already ended) would flip `gameActive` back on with the
-    /// finished `score` still populated, letting the player tap for up to
-    /// another second and then record a second, inflated round off the same
-    /// score. `gameActive` is cleared only once `tick()` has recorded the
-    /// round, so it is exactly the right thing to gate on; `reset()` sets it
-    /// back to `true` itself before calling this, so the reset path is
-    /// unaffected.
+    /// Re-arms the round timer only when a round is genuinely live and has
+    /// actually been started by a tap. Without the `gameActive` guard, a
+    /// stale re-appear (e.g. returning from the Stats sheet after a round
+    /// already ended) would flip `gameActive` back on with the finished
+    /// `score` still populated, letting the player tap for up to another
+    /// second and then record a second, inflated round off the same score.
+    /// `gameActive` is cleared only once `tick()` has recorded the round, so
+    /// it is exactly the right thing to gate on; `reset()` restores
+    /// `gameActive` to `true` and clears `roundStarted` without calling this
+    /// directly, so a fresh round stays unarmed until the next tap.
+    /// The `roundStarted` guard is what keeps a fresh launch, a reset, or a
+    /// mode switch sitting frozen at full duration instead of silently
+    /// starting to count down before the player has tapped anything — it's
+    /// only flipped on by `tap()`, never by `start()` itself, so reappearing
+    /// in the "ready" (not yet tapped) state stays frozen too.
     func start() {
-        guard gameActive else { return }
+        guard gameActive, roundStarted else { return }
         timer?.invalidate()
         timer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { [weak self] _ in
             self?.tick()
@@ -88,11 +103,12 @@ final class GameViewModel: ObservableObject {
     }
 
     func reset() {
+        stop()
         score = 0
         timeRemaining = mode.duration
         isNewHighScore = false
         gameActive = true
-        start()
+        roundStarted = false
     }
 
     func stop() {

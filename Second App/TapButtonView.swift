@@ -9,10 +9,11 @@ import SwiftUI
 
 struct TapButtonView: View {
     let action: () -> Void
+    var label: String = "Tap Me!"
 
     var body: some View {
         Button(action: action) {
-            Text("Tap Me!")
+            Text(label)
                 .font(.title)
                 .fontWeight(.bold)
                 .padding()

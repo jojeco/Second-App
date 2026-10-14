@@ -41,11 +41,20 @@ struct ContentView: View {
                 .foregroundColor(color(for: GameLogic.urgency(forTimeRemaining: viewModel.timeRemaining)))
                 .padding()
 
+            if viewModel.gameActive && !viewModel.roundStarted {
+                Text("Timer starts on your first tap!")
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+            }
+
             Spacer()
 
             // Tap Button (while the round is active) / Game Over summary (once it ends)
             if viewModel.gameActive {
-                TapButtonView(action: viewModel.tap)
+                TapButtonView(
+                    action: viewModel.tap,
+                    label: viewModel.roundStarted ? "Tap Me!" : "Tap to Start!"
+                )
             } else {
                 GameOverView(
                     score: viewModel.score,
