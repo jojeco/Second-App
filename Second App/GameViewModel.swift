@@ -21,6 +21,7 @@ final class GameViewModel: ObservableObject {
     @Published private(set) var summary: GameLogic.StatsSummary
     @Published private(set) var modeSummaries: [GameMode: GameLogic.StatsSummary]
     @Published private(set) var recentRounds: [RoundRecord]
+    @Published private(set) var scoreComparison: GameLogic.ScoreComparison? = nil
 
     private var timer: Timer?
     private let store: GameStatsStore
@@ -28,10 +29,17 @@ final class GameViewModel: ObservableObject {
     init(defaults: UserDefaults = .standard) {
         let store = GameStatsStore(defaults: defaults)
         self.store = store
-        self.highScore = store.highScore(for: .classic)
+        // Reopen in whatever mode the player last picked; an unset or
+        // corrupt stored value falls back to Classic via `lastSelectedMode`
+        // returning nil.
+        let initialMode = store.lastSelectedMode ?? .classic
+        self.highScore = store.highScore(for: initialMode)
         self.summary = GameLogic.summarize(totals: store.archive.lifetime ?? .empty)
         self.modeSummaries = GameViewModel.computeModeSummaries(from: store)
         self.recentRounds = store.rounds(for: nil)
+        // Override the declared Classic defaults with the restored mode.
+        self.mode = initialMode
+        self.timeRemaining = initialMode.duration
     }
 
     private static func computeModeSummaries(from store: GameStatsStore) -> [GameMode: GameLogic.StatsSummary] {
@@ -80,6 +88,7 @@ final class GameViewModel: ObservableObject {
         guard newMode != mode else { return }
         stop()
         mode = newMode
+        store.saveLastSelectedMode(newMode)
         highScore = store.highScore(for: newMode)
         reset()
     }
@@ -92,10 +101,12 @@ final class GameViewModel: ObservableObject {
         guard timeRemaining <= 0 else { return }
         timer?.invalidate()
         timer = nil
+        let previousHighScore = store.highScore(for: mode)
         let round = RoundRecord(modeID: mode.rawValue, score: score, duration: mode.duration, date: Date())
         let outcome = store.record(round: round, mode: mode)
         highScore = store.highScore(for: mode)
         isNewHighScore = outcome.isNewHighScore
+        scoreComparison = GameLogic.compare(score: score, previousHighScore: previousHighScore)
         summary = GameLogic.summarize(totals: store.archive.lifetime ?? .empty)
         modeSummaries = GameViewModel.computeModeSummaries(from: store)
         recentRounds = store.rounds(for: nil)
@@ -107,6 +118,7 @@ final class GameViewModel: ObservableObject {
         score = 0
         timeRemaining = mode.duration
         isNewHighScore = false
+        scoreComparison = nil
         gameActive = true
         roundStarted = false
     }

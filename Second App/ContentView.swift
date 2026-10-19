@@ -61,7 +61,8 @@ struct ContentView: View {
                     highScore: viewModel.highScore,
                     isNewHighScore: viewModel.isNewHighScore,
                     modeName: viewModel.mode.displayName,
-                    tapsPerSecond: Double(viewModel.score) / Double(max(viewModel.mode.duration, 1))
+                    tapsPerSecond: Double(viewModel.score) / Double(max(viewModel.mode.duration, 1)),
+                    comparison: viewModel.scoreComparison
                 )
             }
 

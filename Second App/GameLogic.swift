@@ -25,6 +25,29 @@ enum GameLogic {
         return RoundOutcome(highScore: highScore, isNewHighScore: isNewHighScore)
     }
 
+    /// How a just-finished round's score stacks up against the mode's
+    /// previous best, for display on the Game Over screen.
+    enum ScoreComparison: Equatable {
+        case firstScore
+        case newBest(by: Int)
+        case tied
+        case short(by: Int)
+    }
+
+    static func compare(score: Int, previousHighScore: Int) -> ScoreComparison? {
+        guard score != 0 else { return nil }
+        if previousHighScore == 0 {
+            return .firstScore
+        }
+        if score > previousHighScore {
+            return .newBest(by: score - previousHighScore)
+        }
+        if score == previousHighScore {
+            return .tied
+        }
+        return .short(by: previousHighScore - score)
+    }
+
     enum TimeUrgency {
         case normal
         case warning

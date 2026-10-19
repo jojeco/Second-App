@@ -27,9 +27,23 @@ struct StatsArchive: Codable, Equatable {
 
 final class GameStatsStore {
     static let archiveKey = "com.jojeco.SecondApp.stats.v1"
+    static let lastModeKey = "com.jojeco.SecondApp.lastMode"
 
     private let defaults: UserDefaults
     private(set) var archive: StatsArchive
+
+    /// The last mode the player explicitly selected, so the app can reopen
+    /// in it. Separate from `StatsArchive` — this is UI preference, not
+    /// stats, and doesn't touch the archive's schema. A corrupt/unknown
+    /// stored value (or none at all) decodes to `nil` rather than crashing.
+    var lastSelectedMode: GameMode? {
+        guard let id = defaults.string(forKey: GameStatsStore.lastModeKey) else { return nil }
+        return GameMode.mode(forID: id)
+    }
+
+    func saveLastSelectedMode(_ mode: GameMode) {
+        defaults.set(mode.rawValue, forKey: GameStatsStore.lastModeKey)
+    }
 
     init(defaults: UserDefaults = .standard) {
         self.defaults = defaults

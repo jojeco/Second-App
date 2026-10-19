@@ -13,6 +13,7 @@ struct GameOverView: View {
     let isNewHighScore: Bool
     let modeName: String
     let tapsPerSecond: Double
+    let comparison: GameLogic.ScoreComparison?
 
     var body: some View {
         VStack(spacing: 8) {
@@ -26,6 +27,11 @@ struct GameOverView: View {
                 .font(.title2)
             Text(String(format: "%.1f taps/sec", tapsPerSecond))
                 .font(.subheadline)
+            if let comparisonCaption {
+                Text(comparisonCaption)
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+            }
             Text("High Score: \(highScore)")
                 .font(.headline)
             if isNewHighScore {
@@ -35,5 +41,18 @@ struct GameOverView: View {
             }
         }
         .padding()
+    }
+
+    private var comparisonCaption: String? {
+        switch comparison {
+        case .newBest(let by):
+            return "+\(by) over your previous best"
+        case .tied:
+            return "Tied your best!"
+        case .short(let by):
+            return "\(by) short of your best"
+        case .firstScore, .none:
+            return nil
+        }
     }
 }
