@@ -30,7 +30,8 @@ struct GameOverView: View {
             if let comparisonCaption {
                 Text(comparisonCaption)
                     .font(.caption)
-                    .foregroundColor(.secondary)
+                    .foregroundColor(comparisonColor)
+                    .fontWeight(comparisonFontWeight)
             }
             Text("High Score: \(highScore)")
                 .font(.headline)
@@ -41,6 +42,26 @@ struct GameOverView: View {
             }
         }
         .padding()
+    }
+
+    private var comparisonColor: Color {
+        switch comparison {
+        case .newBest:
+            return .orange
+        case .tied:
+            return .accentColor
+        case .short, .firstScore, .none:
+            return .secondary
+        }
+    }
+
+    private var comparisonFontWeight: Font.Weight? {
+        switch comparison {
+        case .newBest:
+            return .semibold
+        case .tied, .short, .firstScore, .none:
+            return nil
+        }
     }
 
     private var comparisonCaption: String? {
