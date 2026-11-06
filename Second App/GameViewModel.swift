@@ -102,11 +102,11 @@ final class GameViewModel: ObservableObject {
         timer?.invalidate()
         timer = nil
         let previousHighScore = store.highScore(for: mode)
-        let round = RoundRecord(modeID: mode.rawValue, score: score, duration: mode.duration, date: Date())
+        let round = RoundRecord(modeID: mode.rawValue, score: score, duration: mode.duration, date: Date(), previousBest: previousHighScore)
         let outcome = store.record(round: round, mode: mode)
         highScore = store.highScore(for: mode)
         isNewHighScore = outcome.isNewHighScore
-        scoreComparison = GameLogic.compare(score: score, previousHighScore: previousHighScore)
+        scoreComparison = round.comparison
         summary = GameLogic.summarize(totals: store.archive.lifetime ?? .empty)
         modeSummaries = GameViewModel.computeModeSummaries(from: store)
         recentRounds = store.rounds(for: nil)

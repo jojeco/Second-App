@@ -63,6 +63,9 @@ struct StatsView: View {
                                     Text(round.date.formatted(date: .abbreviated, time: .shortened))
                                         .font(.caption)
                                         .foregroundColor(.secondary)
+                                    if let comparison = round.comparison, let caption = comparison.caption {
+                                        Text(caption).font(.caption2).foregroundColor(comparison.color).fontWeight(comparison.fontWeight)
+                                    }
                                 }
                                 Spacer()
                                 VStack(alignment: .trailing, spacing: 2) {

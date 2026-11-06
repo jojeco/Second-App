@@ -27,11 +27,8 @@ struct GameOverView: View {
                 .font(.title2)
             Text(String(format: "%.1f taps/sec", tapsPerSecond))
                 .font(.subheadline)
-            if let comparisonCaption {
-                Text(comparisonCaption)
-                    .font(.caption)
-                    .foregroundColor(comparisonColor)
-                    .fontWeight(comparisonFontWeight)
+            if let comparison, let caption = comparison.caption {
+                Text(caption).font(.caption).foregroundColor(comparison.color).fontWeight(comparison.fontWeight)
             }
             Text("High Score: \(highScore)")
                 .font(.headline)
@@ -43,36 +40,38 @@ struct GameOverView: View {
         }
         .padding()
     }
+}
 
-    private var comparisonColor: Color {
-        switch comparison {
-        case .newBest:
-            return .orange
-        case .tied:
-            return .accentColor
-        case .short, .firstScore, .none:
-            return .secondary
-        }
-    }
-
-    private var comparisonFontWeight: Font.Weight? {
-        switch comparison {
-        case .newBest:
-            return .semibold
-        case .tied, .short, .firstScore, .none:
-            return nil
-        }
-    }
-
-    private var comparisonCaption: String? {
-        switch comparison {
+extension GameLogic.ScoreComparison {
+    var caption: String? {
+        switch self {
         case .newBest(let by):
             return "+\(by) over your previous best"
         case .tied:
             return "Tied your best!"
         case .short(let by):
             return "\(by) short of your best"
-        case .firstScore, .none:
+        case .firstScore:
+            return nil
+        }
+    }
+
+    var color: Color {
+        switch self {
+        case .newBest:
+            return .orange
+        case .tied:
+            return .accentColor
+        case .short, .firstScore:
+            return .secondary
+        }
+    }
+
+    var fontWeight: Font.Weight? {
+        switch self {
+        case .newBest:
+            return .semibold
+        case .tied, .short, .firstScore:
             return nil
         }
     }
