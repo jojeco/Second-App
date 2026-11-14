@@ -38,7 +38,7 @@ struct ContentView: View {
             // Countdown Timer
             Text("Time: \(viewModel.timeRemaining)s")
                 .font(.title2)
-                .foregroundColor(color(for: GameLogic.urgency(forTimeRemaining: viewModel.timeRemaining)))
+                .foregroundColor(color(for: GameLogic.urgency(forTimeRemaining: viewModel.timeRemaining, duration: viewModel.mode.duration)))
                 .padding()
 
             if viewModel.gameActive && !viewModel.roundStarted {

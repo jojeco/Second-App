@@ -54,10 +54,11 @@ enum GameLogic {
         case critical
     }
 
-    static func urgency(forTimeRemaining t: Int) -> TimeUrgency {
-        if t <= 5 {
+    /// Thresholds scale down for short modes so a 10s round isn't "warning" from the start.
+    static func urgency(forTimeRemaining t: Int, duration: Int) -> TimeUrgency {
+        if t <= min(5, duration / 5) {
             return .critical
-        } else if t <= 10 {
+        } else if t <= min(10, duration / 3) {
             return .warning
         } else {
             return .normal

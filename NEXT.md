@@ -9,3 +9,5 @@
 Note: the timer used to start counting down on appear/reset/mode-switch before the player's first tap (worst for the 10s Sprint mode) — fixed via a `roundStarted` flag on `GameViewModel`; the round now stays frozen at full duration until the first tap arms it.
 
 Note: the Stats sheet's "All" filter intentionally still reports one global `bestTapsPerSecond` across every mode, so Sprint's short duration dominates it — pre-existing behavior, left as-is on purpose. Picking a single mode in the filter shows that mode's own per-mode best taps/sec.
+
+Note: `GameLogic.urgency` thresholds now scale with the mode's `duration` so Sprint's 10s round doesn't show "warning" color for its entire length.
