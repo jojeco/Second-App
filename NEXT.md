@@ -4,7 +4,7 @@
 - `GameStatsStore.lastSelectedMode` persists the last-picked mode across launches; consider also remembering the mode the Stats sheet's filter was last set to.
 - `GameOverView` now takes 6 params; if a 7th shows up, consider bundling round-end info (score, highScore, isNewHighScore, comparison) into a single small struct instead of growing the parameter list further.
 - The Stats sheet's Recent Rounds now shows each round's vs-previous-best caption via `RoundRecord.previousBest`/`.comparison`. Rounds recorded before this field existed have `previousBest == nil` and show no caption — intended, not a bug.
-- Candidate: for a new-best round in the Stats rows, show a small "Best" badge or icon instead of the long caption.
+- Done: a new-best (or first-ever) round in the Stats rows now shows a small trophy icon next to the score instead of the long caption; `.tied`/`.short` captions are unchanged.
 
 Note: the timer used to start counting down on appear/reset/mode-switch before the player's first tap (worst for the 10s Sprint mode) — fixed via a `roundStarted` flag on `GameViewModel`; the round now stays frozen at full duration until the first tap arms it.
 

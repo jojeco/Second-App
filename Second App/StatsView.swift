@@ -26,6 +26,12 @@ struct StatsView: View {
         return rounds.filter { $0.modeID == filter.rawValue }
     }
 
+    private func isBest(_ round: RoundRecord) -> Bool {
+        if case .newBest = round.comparison { return true }
+        if case .firstScore = round.comparison { return true }
+        return false
+    }
+
     var body: some View {
         NavigationStack {
             List {
@@ -63,14 +69,22 @@ struct StatsView: View {
                                     Text(round.date.formatted(date: .abbreviated, time: .shortened))
                                         .font(.caption)
                                         .foregroundColor(.secondary)
-                                    if let comparison = round.comparison, let caption = comparison.caption {
+                                    if let comparison = round.comparison, let caption = comparison.caption, !isBest(round) {
                                         Text(caption).font(.caption2).foregroundColor(comparison.color).fontWeight(comparison.fontWeight)
                                     }
                                 }
                                 Spacer()
                                 VStack(alignment: .trailing, spacing: 2) {
-                                    Text("\(round.score)")
-                                        .font(.headline)
+                                    HStack(spacing: 4) {
+                                        if isBest(round) {
+                                            Image(systemName: "trophy.fill")
+                                                .foregroundColor(.orange)
+                                                .font(.caption)
+                                                .accessibilityLabel("Best")
+                                        }
+                                        Text("\(round.score)")
+                                            .font(.headline)
+                                    }
                                     Text(String(format: "%.1f taps/sec", round.tapsPerSecond))
                                         .font(.caption)
                                         .foregroundColor(.secondary)
